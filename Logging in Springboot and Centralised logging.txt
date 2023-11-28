@@ -1,0 +1,113 @@
+Best Practices for Logging in SpringBoot Microservices
+
+Logging-
+Logging in spring boot refers to the practice of recording information,events, and actions within a spring boot.
+Logs play a key role in helping the application to recover quickly from any such failures and resume normal operations.It is an integral and indispensable aspect of the software development process. It empowers developers to effectively monitor and troubleshoot applications by gathering and analyzing data. By identifying potential issues and bugs, logging plays a pivotal role in enhancing code quality and optimizing performance.
+
+
+1. Choose a logging framework-
+Java has built-in logging functionality provided by the java.util.logging package. However, even though it is effortless to set up and use, it only offers basic logging features, making it unsuitable for production-ready applications.
+By default slf4j(simple logging facade for Java) is the most popular framework as it provides a simple abstraction layer to any kind of logging framework.
+
+If you are building a large-scale application, you'll likely need a more robust logging solution, which should have the following features:
+
+=>The framework should be able to log events in a structured format such as JSON, logfmt, and so on.
+=>It should allow you to include contextual information that describes the logged event.
+=>It should have a centralized configuration system that allows you to configure the logging system in one place without altering the application code.
+=>Other features such as filtering, asynchronous logging, detailed documentation, good community support, and so on.
+
+You get all of these features out of the box by using a third-party logging framework. And in the Java community, the two most popular options are Log4j and Logback.
+
+1)Log4j
+ It is a powerful and flexible logging framework for Java applications. It provides a wide range of features, including log levels, various logging appenders, advanced logging configurations, and support for asynchronous logging. The framework has a modular architecture that allows developers to easily extend and customize its functionality, and it provides an intuitive API that makes it easy to integrate with other tools and frameworks.
+
+2)Logback
+ is a project created based on the old Log4j 1, as a result, they offer similar functionality. On top of that, Logback offers many improvements. It is known for its simplicity and ease of use, with a consistent API and configuration process that make it easy to integrate with other tools and frameworks. Additionally, Logback is highly performant, with a focus on efficiency and minimal resource usage. The framework is actively maintained and has a large user community, making it a reliable choice for logging in Java applications.
+
+If you are loking for simple and easy to use,you should prefer the logback , if need more feature rich you should go with log4j
+
+2. Mask the logging framework with SLF4J
+Many of the developer refer to SLF4J as a logging framework, but that is not an accurate definition. It is not like Log4j or Logback, instead, it provides an interface that work on top of other logging frameworks, allowing developers to switch the underlying logging frameworks without having to change any code.
+
+3. Use the most appropriate log level
+The log level is a fundamental concept in logging, no matter which logging framework you use. It allows you to tag log records according to their severity or importance. SLF4J offers the following log levels by default:
+
+TRACE: typically used to provide detailed diagnostic information that can be used for troubleshooting and debugging. Compare to DEBUG messages, TRACE messages are more fine-grained and verbose.
+DEBUG: used to provide information that can be used to diagnose issues especially those related to program state.
+INFO: used to record events that indicate that program is functioning normally.
+WARN: used to record potential issues in your application. They may not be critical but should be investigated.
+ERROR: records unexpected errors that occur during the operation of your application. In most cases, the error should be addressed as soon as possible to prevent further problems or outages.
+
+4. Log in a structured format
+Plain text log message are easy for humans to read but not so much for machines . However, when running an application with a considerable number of logs, you'll definitely need to rely on machines to process them to allow for more efficient log processing and analysis workflows. Logging in a structured format, such as JSON, makes it easier for machines to process and analyze the log records.
+Log4j offers a convenient feature that allows you to log in different formats, called layouts . It enables you to format the log records into CSV, JSON, XML, YAML, etc. The most commonly used format is JSON.
+
+To log in JSON format using Log4j, make sure you include the jackson-databind dependency in your pom.xml file
+ou can also use the JsonTemplateLayout instead, which allows you to specify a template that the JSON output should follow. Ensure you have the log4j-layout-template-json dependency in your pom.xml
+
+6. Forward the logs to the standard output
+ Appenders allow you to push the logs to different destinations, such as the console, local files, databases, and so on. You can set up a logger with multiple appenders to forward the logs to different destinations. 
+ex-
+   </Appenders>
+    <Loggers>
+        <Root level="TRACE">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+            <AppenderRef ref="database" />
+        </Root>
+    </Loggers>
+
+Log4j2 Without SLF4J
+We can also use Log4j2 natively, without passing through SLF4J.
+We don’t need to perform any other modification to the standard Log4j2 Spring Boot configuration.
+We can now exploit the brand-new features of Log4j2 without getting stuck with the old SLF4J interface. But we’re also tied to this implementation, and we’ll need to rewrite our code when switching to another logging framework
+
+*Centralised logging=
+Centralized Logging Solution
+The Centralised logging approach enables us to consolidate all the logs from distributed application services and monitor them from one interface. It provides easy access to logs for analysis in one single dashboard and we do not have to search on each server to troubleshoot.
+
+The most popular implementation of a centralized logging solution is Elastic Search, Logstash, Kibana (ELK). However, these can also be replaced with alternatives.
+
+Centralized logging approach also has its Pros and Cons
+
+Pros:
+
+All application service and system logs are accessible from one Interface
+A single dashboard provides an application-wide view
+Provides better monitoring of the whole microservice application
+Cons:
+
+Requires significant one-time efforts to set up centralized logging
+Not very useful for Monolithic applications
+to perform this operation we need to integrate this three component
+ elastic,logtash and kibana
+
+1)Elastic search- Elastic serach is a NoSQL database that is based on the Lucence seacrh engin which will helps us to store inputs/logs localhost:9200
+
+2)logstash - Logstash is a log pipeline tool that accepts input/logs from various sources & exports the data to various targets
+localhost:5601
+
+
+3)kibana- Kibana is a visualization UI layer, which will helps developer to monitor application logs
+
+1 log file=> 2 Data Processing            3 Storage                      4 Visualize
+
+           (Collect,Parse,Tranform)    (Store,Index,search)        (Analyse,Visualise,monitor)       
+                     |                     |                              |
+                   logstash             elasticsearch                    kibana
+
+Collect, Parse, Transform
+The first component of the centralized logging mechanism is collecting incoming log data and parse it to a more structured format. Filters can also be used to extract relevant data.
+
+Logstash is the most popular framework for this activity. Other alternatives are Fluentd, Flume. AWS Kinesis can also be used along with Cloud watch in place of Logstash.
+
+
+Store, Index, Search
+The second component of the mechanism is storing the consolidated and filtered data so that it can be processed for analysis. Indexing is also applied to the data to make it searchable.Elastic Search is the widely used search engine for centralized logging. It helps in providing speedy search results.
+
+Analyse, Visualise, Monitor
+The third component of the mechanism is to provide visualization to the processed data that can be analyzed and monitored from one interface. It provides single-point access to the logs of all the application services involved
+Kibana is the popular choice and provides one dashboard to access all the data. Further, it supports different chart structure visualization of the events to provide better control over a large amount of data.
+
+Logging in Containers:
+When running Spring Boot microservices in containers, consider logging to stdout/stderr. Container platforms like Docker and Kubernetes can capture and aggregate these logs for you.
